@@ -364,7 +364,13 @@ fi
 
 # --- Inline ghost-text suggestion from history (accept with → or End) ---
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+# Fixed gray: color 8 follows the theme, and 8-color TERMs (xterm, screen) drop it entirely
+zmodload zsh/terminfo
+if (( ${terminfo[colors]:-0} >= 256 )); then
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=244'
+else
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=cyan'
+fi
 _load_plugin zsh-autosuggestions
 
 # --- Up/Down: cycle history entries containing what's typed (anywhere) ---
