@@ -377,6 +377,17 @@ _load_plugin zsh-autosuggestions
 if _load_plugin zsh-history-substring-search; then
   HISTORY_SUBSTRING_SEARCH_ENSURE_UNIQUE=1
   HISTORY_SUBSTRING_SEARCH_FUZZY=1   # words match in order, gaps allowed
+  # The plugin's stand-in for zsh-syntax-highlighting clears every highlight on each
+  # keypress, which removes the suggestion's color; keep that one highlight.
+  _zsh_highlight() {
+    [[ $KEYS == [[:print:]] ]] || return 0
+    if [[ -n $_ZSH_AUTOSUGGEST_LAST_HIGHLIGHT ]]; then
+      region_highlight=( "${(@M)region_highlight:#${(b)_ZSH_AUTOSUGGEST_LAST_HIGHLIGHT}}" )
+    else
+      region_highlight=()
+    fi
+    return 0
+  }
   bindkey '^[[A' history-substring-search-up      # Up
   bindkey '^[OA' history-substring-search-up      # Up (application mode)
   bindkey '^[[B' history-substring-search-down    # Down
