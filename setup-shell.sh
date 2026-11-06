@@ -456,7 +456,7 @@ write_tmux_config() {
   say "Writing ~/.tmux.conf"
   cat > "$HOME/.tmux.conf" <<'TMUX'
 # Managed by setup-shell.sh -- re-running the script overwrites this file.
-# Prefix is the default Ctrl+b.
+# Prefix is Ctrl+a; press it twice to send Ctrl+a to the program in the pane.
 
 # --- Terminal & behaviour ---
 # macOS's system ncurses lacks tmux-256color, so fall back where it's missing
@@ -476,6 +476,10 @@ set -g  display-time 2000
 set -s  set-clipboard on             # copy to system clipboard via OSC 52
 
 # --- Keys ---
+set -g prefix C-a
+unbind C-b
+bind C-a send-prefix
+
 bind r source-file ~/.tmux.conf \; display 'tmux.conf reloaded'
 
 # Splits and new windows open in the current directory; | and - are easier to remember
