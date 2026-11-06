@@ -523,6 +523,9 @@ setw -g window-status-current-style 'fg=colour39,bold'
 set -g pane-border-style 'fg=colour238'
 set -g pane-active-border-style 'fg=colour39'
 TMUX
+  # Panes would otherwise open the login shell, which may still be bash
+  printf "\n# Always open zsh, even if it isn't the login shell\nset -g default-shell %s\n" \
+    "$(command -v zsh)" >> "$HOME/.tmux.conf"
 }
 
 # ------------------------------------------------------------------- main ---
