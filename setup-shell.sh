@@ -211,6 +211,15 @@ install_cli_tools_linux() {
   ensure_tool k9s ""     k9s          || fallback k9s derailed/k9s       "k9s_Linux_$k9s_arch.tar.gz"
 }
 
+# tmux hands mouse selections to these. Only useful with a local desktop session.
+install_clipboard_tools_linux() {
+  [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] || return 0
+  say "Clipboard tools: wl-clipboard xclip"
+  have wl-copy || pkg_add wl-clipboard || ( distro_install wl-clipboard ) || warn "Could not install wl-clipboard"
+  have xclip   || pkg_add xclip        || ( distro_install xclip )        || warn "Could not install xclip"
+  hash -r
+}
+
 FONT_DIR="$HOME/.local/share/fonts"
 
 have_nerd_font() {
@@ -473,7 +482,12 @@ setw -g pane-base-index 1
 set -g  renumber-windows on          # no gaps after closing a window
 set -g  set-titles on
 set -g  display-time 2000
-set -s  set-clipboard on             # copy to system clipboard via OSC 52
+
+# Clipboard: mouse selections copy on release, and y copies in copy mode. Terminal
+# support for OSC 52 varies, so also hand the text to a local clipboard tool.
+set -s  set-clipboard on
+set -s  copy-command 'if [ -n "$WAYLAND_DISPLAY" ] && command -v wl-copy >/dev/null; then wl-copy; elif [ -n "$DISPLAY" ] && command -v xclip >/dev/null; then xclip -selection clipboard -in >/dev/null 2>&1; elif command -v pbcopy >/dev/null; then pbcopy; else cat >/dev/null; fi'
+set -ag update-environment WAYLAND_DISPLAY
 
 # --- Keys ---
 set -g prefix C-a
@@ -508,9 +522,7 @@ bind -r L resize-pane -R 5
 # Copy mode (prefix + [): vi keys, v to select, y to copy
 setw -g mode-keys vi
 bind -T copy-mode-vi v send -X begin-selection
-bind -T copy-mode-vi y send -X copy-selection-and-cancel
-if-shell 'command -v pbcopy >/dev/null' \
-  "bind -T copy-mode-vi y send -X copy-pipe-and-cancel pbcopy"
+bind -T copy-mode-vi y send -X copy-pipe-and-cancel
 
 # --- Look ---
 set -g status-style 'bg=default,fg=colour245'
@@ -532,7 +544,7 @@ TMUX
 
 case "$(uname -s)" in
   Darwin) install_macos ;;
-  Linux)  install_linux; install_cli_tools_linux; install_nerd_font_linux ;;
+  Linux)  install_linux; install_cli_tools_linux; install_clipboard_tools_linux; install_nerd_font_linux ;;
   *) warn "Unsupported OS: $(uname -s)"; exit 1 ;;
 esac
 
